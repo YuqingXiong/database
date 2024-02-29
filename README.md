@@ -5,9 +5,10 @@
 
 1. note link：[MySQL基础](https://github.com/YuqingXiong/database/blob/master/1_MySQL基础.md)
    - 查询，增删改
+   - 视图、存储、触发器
+   - 事务：ACID
    - 数据类型
-   - 事务
-   - 范式
+   - 设计数据库：范式
    - 索引
 2. note link：[MySQL原理](https://github.com/YuqingXiong/database/blob/master/2_MySQL原理.md)
    - 逻辑架构
@@ -28,7 +29,11 @@
      - 索引应用：正确使用索引的方式、MRR和跳跃式扫描优化机制
      - 面试题
    - 事务
+     - ACID：原子性、一致性、隔离性、持久性
+     - 隔离级别：读未提交、读已提交、可重复读、序列化
    - 锁
+     - 锁的类型
+     - 死锁分析：间隙锁互相兼容，但与插入意向锁冲突造成的死锁
    - 日志
    - 性能调优
 3. [MySQL高可用]()
