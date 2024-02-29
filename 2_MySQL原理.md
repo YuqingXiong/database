@@ -2,13 +2,13 @@
 
 ## MySQL 架构
 
-![image-20240223161340352](https://xiongyuqing-img.oss-cn-qingdao.aliyuncs.com/img/202402231613417.png)
+![image-20240223161340352](https://xiongyuqing-img.oss-cn-qingdao.aliyuncs.com/img/202402282037504.png)
 
 MySQL使用 C/S 架构。分为三个层次：连接层、服务层和引擎层
 
 - 连接层：客户端与MySQL服务器建立TCP链接，对传输过来的账号密码做身份认证和权限获取
 
-![image-20240223161812048](https://xiongyuqing-img.oss-cn-qingdao.aliyuncs.com/img/202402231618159.png)
+![image-20240223161812048](https://xiongyuqing-img.oss-cn-qingdao.aliyuncs.com/img/202402282037587.png)
 
 - 服务层：
   - SQL 接口：接收用户的SQL命令，返回用户需要的查询结果
@@ -64,7 +64,7 @@ B站视频：https://www.bilibili.com/video/BV1iq4y1u7vj/?p=110
   - `表名.MYI`：存储索引
 - 应用场景：适用于查询和插入为主的应用
 
-![image-20240226155612542](https://xiongyuqing-img.oss-cn-qingdao.aliyuncs.com/img/202402261556941.png)
+![image-20240226155612542](https://xiongyuqing-img.oss-cn-qingdao.aliyuncs.com/img/202402282037567.png)
 
 ### 其他存储引擎
 
@@ -100,7 +100,7 @@ B站视频：https://www.bilibili.com/video/BV1iq4y1u7vj/?p=110
 
   - 占用磁盘的存储空间是一样的
   - 但是消耗的内存不一样，更长的列消耗的内存会更多：
-  - ![image-20240227151830806](https://xiongyuqing-img.oss-cn-qingdao.aliyuncs.com/img/202402271518904.png)
+  - ![image-20240227151830806](https://xiongyuqing-img.oss-cn-qingdao.aliyuncs.com/img/202402282037450.png)
 
 ## 数据页与B+树
 
@@ -114,13 +114,13 @@ InnoDB给行记录创建的页目录：
 - 每个记录组内的最后一条记录的头信息中存储该组中一共有多少条记录，作为 `n_owned` 字段（粉色字段）
 - 页目录中的槽（slot）存储每组最后一条记录的地址偏移量
 
-![image-20240227155312990](https://xiongyuqing-img.oss-cn-qingdao.aliyuncs.com/img/202402271553199.png)
+![image-20240227155312990](https://xiongyuqing-img.oss-cn-qingdao.aliyuncs.com/img/202402282037528.png)
 
 通过槽查找记录时，可以使用**二分法**快速定位查询的记录在哪个槽（分组），再遍历组内所有记录，找到对应记录
 
 ### 多数据页用B+树建立索引
 
-![image-20240227161102222](https://xiongyuqing-img.oss-cn-qingdao.aliyuncs.com/img/202402271611291.png)
+![image-20240227161102222](https://xiongyuqing-img.oss-cn-qingdao.aliyuncs.com/img/202402282037483.png)
 
 - 只有叶子节点才存放数据，其他上层节点仅存放目录项的索引
 - 所有节点按照索引键大小排序，构成一个双向链表，便于范围查询
@@ -149,7 +149,7 @@ Buffer Pool 除了缓存「索引页」和「数据页」，还包括了 undo �
 
 InnoDB为每个缓存页创建一个控制块，放在 Buffer Pool 的最前面
 
-![img](https://xiongyuqing-img.oss-cn-qingdao.aliyuncs.com/img/202402281450662.png)
+![img](https://xiongyuqing-img.oss-cn-qingdao.aliyuncs.com/img/202402282037168.png)
 
 ### 管理 Buffer Pool
 
@@ -157,7 +157,7 @@ InnoDB为每个缓存页创建一个控制块，放在 Buffer Pool 的最前面
 
 从磁盘缓存数据到内存需要找到一个空闲页，为了能快速找到空闲的缓存页，使用了一个 Free链表 （空闲链表）的结构，将空闲的缓存页的控制块作为链表的节点
 
-![img](https://xiongyuqing-img.oss-cn-qingdao.aliyuncs.com/img/202402281456386.png)
+![img](https://xiongyuqing-img.oss-cn-qingdao.aliyuncs.com/img/202402282037243.png)
 
 这样就可以根据 Free 链表 找到空闲缓存页，然后再控制块填上对应的缓存信息，再把该控制块对应的节点从Free链表中移除
 
@@ -167,7 +167,7 @@ InnoDB为每个缓存页创建一个控制块，放在 Buffer Pool 的最前面
 
 为了知道哪些数据页是脏的，设计了 Flush 链表，链表节点指向脏页的控制块
 
-![img](https://xiongyuqing-img.oss-cn-qingdao.aliyuncs.com/img/202402281500701.png)
+![img](https://xiongyuqing-img.oss-cn-qingdao.aliyuncs.com/img/202402282037206.png)
 
 后台线程可以遍历 Flush 链表将脏页写入磁盘。
 
@@ -256,17 +256,17 @@ MySQL宕机时，日志会让MySQL拥有崩溃恢复的能力，所以数据不�
 
 堆表中的数据无序存放，数据的排序完全依赖于索引
 
-![image-20240228194608570](https://xiongyuqing-img.oss-cn-qingdao.aliyuncs.com/img/202402281946762.png)
+![image-20240228194608570](https://xiongyuqing-img.oss-cn-qingdao.aliyuncs.com/img/202402282037329.png)
 
 **索引组织表：数据根据主键排序存放在索引中。** 此时主键索引也叫聚集索引。在索引组织表中，数据即索引，索引即数据。
 
-![image-20240228194622726](https://xiongyuqing-img.oss-cn-qingdao.aliyuncs.com/img/202402281946868.png)
+![image-20240228194622726](https://xiongyuqing-img.oss-cn-qingdao.aliyuncs.com/img/202402282037477.png)
 
 二级索引的叶子节点存放的不是数据，而是索引键值（主键值）
 
 **二级索引根据主键值进行再一次查询的操作称为“回表”**
 
-![image-20240228194800830](https://xiongyuqing-img.oss-cn-qingdao.aliyuncs.com/img/202402281948903.png)
+![image-20240228194800830](https://xiongyuqing-img.oss-cn-qingdao.aliyuncs.com/img/202402282037761.png)
 
 二级索引的设计可以使得记录发生修改时，其他索引无需进行维护，除非记录的主键发生修改。所以，与堆表相比，索引组织表在存在大量变更的场景下，性能优势明显。
 
@@ -335,8 +335,162 @@ idx_col_date(my_col, date);
 
 这里有6中索引失效的场景
 
-### 对索引使用左或者左右模糊匹配
+### 1 对索引使用左或者左右模糊匹配
 
 `like %xx` 或者 `like %xx%` 会造成索引失效
 
-**索引 B+ 树是按照 索引值 有序排列存储的，只能根据前缀进行比较**
+**因为索引 B+ 树是按照「索引值」有序排列存储的，只能根据前缀进行比较。**
+
+### 2 对索引使用函数
+
+索引保存的是索引字段的原始值，而不是经过函数计算后的值，所以就无法应用索引。
+
+例如 :
+
+```mysql
+select * from t_user where length(name) = 6;
+select * from t_user where data_format(register_date, '%Y-%m') = '2024-01';
+-- 或许开发同学认为在 register_date 创建了索引，所以所有的 SQL 都可以使用该索引。但索引的本质是排序， 索引 idx_register_date 只对 register_date 的数据排序，又没有对DATE_FORMAT(register_date) 排序，因此上述 SQL 无法使用二级索引idx_register_dat
+```
+
+函数索引可以解决问题：
+
+```mysql
+alter table t_user add key idx_name_length ((length(name)));
+```
+
+### 3 对索引进行表达式计算
+
+```mysql
+select * from t_user where id + 1 = 10; -- ALL
+select * from t_user where id = 10 - 1; -- 索引
+```
+
+因为索引保存的是索引字段的原始值，而不是 id + 1 表达式计算后的值，所以无法走索引，只能通过把索引字段的取值都取出来，然后依次进行表达式的计算来进行条件判断，因此采用的就是全表扫描的方式。
+
+### 4 对索引隐式类型转换
+
+字符串类型字段，查询参数是整型，造成索引失效
+
+```mysql
+-- phone 为 varchar
+select * from t_user where phone = 1300000001;
+```
+
+整数类型字段，查询参数即使是字符串，也不会索引失效
+
+```mysql
+ explain select * from t_user where id = '1';
+```
+
+这是因为 MySQL 是将字符串转换为数字进行处理的。当**MySQL 在遇到字符串和数字比较的时候，会自动把字符串转为数字，然后再进行比较**。
+
+### 5 联合索引不是最左匹配
+
+联合索引的正确使用要遵循最左匹配原则
+
+联合索引 (a, b, c) 可匹配的情况：
+
+```mysql
+where a = 1;
+where a = 1 and b = 2 and c = 3;
+where a = 1 and b = 2;
+-- a 字段的顺序不重要，mysql 有查询优化器
+```
+
+但是下面不包含 a 的查询就不符合最左匹配原则：
+
+```mysql
+where b = 2;
+where c = 3;
+where b = 2 and c = 3;
+```
+
+特殊的索引截断:
+
+```mysql
+where a = 1 and c = 3;
+-- MySQL 5.5 前是 a 走索引后开始回表，交给 Server 层进行 c 字段的比较
+-- MySQL 5.6 后使用索引下推，先在引擎层过滤出复合条件的数据再返回给 Server 层，减少回表次数
+```
+
+### 6  WHERE 子句中的 OR
+
+OR 的含义就是两个只要满足一个即可，因此只有一个条件列是索引列是没有意义的。
+
+只要有条件列不是索引列，就会进行全表扫描。
+
+例如:
+
+```mysql
+select * from t_user where id = 1 or age = 18;
+```
+
+避免全表扫描，把 age 设置为索引后，MySQL 就会 Index merge，将根据 id 和 age 索引的搜索结果集进行合并
+
+## 索引选择
+
+[11 索引出错：请理解 CBO 的工作原理 (lianglianglee.com)](https://learn.lianglianglee.com/专栏/MySQL实战宝典/11  索引出错：请理解 CBO 的工作原理.md)
+
+MySQL 的优化器如何执行？选择索引的依据？
+
+SQL 优化器会选择成本最低的执行计划执行，称为基于成本的优化器 CBO (Cost-based Optimizer)
+
+一条 SQL 的计算成本：
+
+```
+Cost = Server Cost + Engine Cost
+     = CPU cost + IO cost
+```
+
+CPU cost ：计算开销，比如索引键值变焦、记录值比较，结果集排序
+
+IO cost ： IO 开销，区分表数据是否在内存，计算读内存的IO开销以及读磁盘的IO开销
+
+### 索引出错案例
+
+#### 1 未能使用创建的索引
+
+查询范围不同导致优化器选择不同
+
+使用二级索引需要回表，查询范围大时，大量回表操作的成本可能比全表扫描的成本大。
+
+#### 2 索引创建在有限状态上
+
+创建索引的列上的数据存在数据倾斜，通过索引查询少量数据时，优化器认为数据是平均分布的，为了避免回表，而选择全表扫描。
+
+这时可以用 8.0 的功能创建直方图，让 MySQL 知道数据分布
+
+## 索引应用
+
+[(五)MySQL索引应用篇：建立索引的正确姿势与使用索引的最佳指南！ - 掘金 (juejin.cn)](https://juejin.cn/post/7149074488649318431)
+
+建立索引的优点和缺点？正确使用索引？判断场景是否适合建立索引？
+
+#### MRR(Multi-Range Read)机制
+
+针对辅助索引的回表查询，减少离散 IO ，将随机 IO 转换为顺序 IO ，从而提高查询效率
+
+`MRR`机制中，对于辅助索引中查询出的`ID`，会将其放到缓冲区的`read_rnd_buffer`中，然后等全部的索引检索工作完成后，或者缓冲区中的数据达到`read_rnd_buffer_size`大小时，此时`MySQL`会对缓冲区中的数据排序，从而得到一个有序的`ID`集合：`rest_sort`，最终再根据顺序`IO`去聚簇/主键索引中回表查询数据。
+
+#### Index Skip Scan索引跳跃式扫描
+
+MySQL 8.x 加入了索引跳跃式扫描的优化机制，使得查询条件不是必须满足最左匹配原则。
+
+实现方式：重构 SQL，AND 增加一个第一个字段的查询条件，把第一个字段的所有不重复值都作为索引连接到原来的查询上：
+
+```mysql
+SELECT * FROM `tb_xx` WHERE B = `xxx` AND C = `xxx`;
+
+-- 重构：
+SELECT * FROM `tb_xx` WHERE B = `xxx` AND C = `xxx`
+UNION ALL
+SELECT * FROM `tb_xx` WHERE B = `xxx` AND C = `xxx` AND A = "yyy"
+......
+SELECT * FROM `tb_xx` WHERE B = `xxx` AND C = `xxx` AND A = "zzz";
+
+```
+
+## 索引常见面试题
+
+[索引常见面试题 | 小林coding (xiaolincoding.com)](https://xiaolincoding.com/mysql/index/index_interview.html)
