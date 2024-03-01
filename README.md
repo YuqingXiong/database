@@ -43,7 +43,6 @@
      - 索引调优
      - SQL 优化
      - MySQL 性能优化
-3. [MySQL高可用]()
+3. note link：[MySQL高可用](https://github.com/YuqingXiong/database/blob/master/3_MySQL高可用.md)
    - 主从复制 
-   - 分库分表 
-   - 分布式ID
+   - 分库分表
