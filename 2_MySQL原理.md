@@ -628,3 +628,130 @@ SQL 提出四个隔离级别来避免上述三个现象，隔离级别越高，�
 
 # 日志
 
+[MySQL 日志：undo log、redo log、binlog 有什么用？ | 小林coding (xiaolincoding.com)](https://xiaolincoding.com/mysql/log/how_update.html)
+
+更新语句的流程涉及三种日志：
+
+- undo log(回滚日志)：实现事务的原子性，用于事务回滚和 MVCC
+- redo log(重做日志)：实现事务的持久性，用于掉电等故障恢复
+- binlog(归档日志)：Server层日志，用于数据备份和主从复制
+
+> 具体更新一条记录 `UPDATE t_user SET name = 'xiaolin' WHERE id = 1;` 的流程如下:
+>
+> 1. 执行器负责具体执行，会调用存储引擎的接口，通过主键索引树搜索获取 id = 1 这一行记录：
+>    - 如果 id=1 这一行所在的数据页本来就在 buffer pool 中，就直接返回给执行器更新；
+>    - 如果记录不在 buffer pool，将数据页从磁盘读入到 buffer pool，返回记录给执行器。
+> 2. 执行器得到聚簇索引记录后，会看一下更新前的记录和更新后的记录是否一样：
+>    - 如果一样的话就不进行后续更新流程；
+>    - 如果不一样的话就把更新前的记录和更新后的记录都当作参数传给 InnoDB 层，让 InnoDB 真正的执行更新记录的操作；
+> 3. 开启事务， InnoDB 层更新记录前，首先要记录相应的 undo log，因为这是更新操作，需要把被更新的列的旧值记下来，也就是要生成一条 undo log，undo log 会写入 Buffer Pool 中的 Undo 页面，不过在内存修改该 Undo 页面后，需要记录对应的 redo log。
+> 4. InnoDB 层开始更新记录，会先更新内存（同时标记为脏页），然后将记录写到 redo log 里面，这个时候更新就算完成了。为了减少磁盘I/O，不会立即将脏页写入磁盘，后续由后台线程选择一个合适的时机将脏页写入到磁盘。这就是 **WAL 技术**，MySQL 的写操作并不是立刻写到磁盘上，而是先写 redo 日志，然后在合适的时间再将修改的行数据写到磁盘上。
+> 5. 至此，一条记录更新完了。
+> 6. 在一条更新语句执行完成后，然后开始记录该语句对应的 binlog，此时记录的 binlog 会被保存到 binlog cache，并没有刷新到硬盘上的 binlog 文件，在事务提交时才会统一将该事务运行过程中的所有 binlog 刷新到硬盘。
+> 7. 事务提交，剩下的就是「两阶段提交」的事情了
+
+# 性能调优
+
+## Benchmark
+
+> 高性能 MySQL 第三版 第二章
+
+## Explain 执行计划
+
+### table
+
+Explanin 语句输出的每条记录对应着某个**单表**的访问方法，table列表示该表表名
+
+### id
+
+查询语句的**每一个 SELECT 关键字，MySQL 会给它分配唯一的 id 值**
+
+对于连接查询，一个SELECT 语句跟随多个表，上文说过，每条记录对应单个表，所以**在连接查询的执行计划中，每个表都会对应一条记录，这些记录的 id 值相同；**
+
+> 查询优化器可能对涉及子查询的查询语句进行重写，从而转换为连接查询
+
+### select_type
+
+[搞清楚 MySQL 派生表、物化表、临时表-CSDN博客](https://blog.csdn.net/cschmin/article/details/123148143)
+
+为每个SELECT关键字代表的小查询定义了一个称之为 select_type 的属性。可取的值：
+
+- SIMPLE ：查询语句不包含 UNION 或者子查询的查询算作 simple 类型
+- PRIMARY：包含 UNION、UNION ALL 或者子查询的大查询来说，它由几个小查询组成，最左边的那个子查询的 select_type 就职 primary
+- UNION：包含 UNION、UNION ALL 或者子查询的大查询来说，它由几个小查询组成，除了最左边的那个子查询外的 select_type 就是 union
+- UNION RESULT：MySQL 选择临时表完成 UNION 查询的去重工作，该临时表的 select_type 就是 union result
+- SUBQUERY：**没懂**
+- DEPENDENT SUBQUERY
+- DEPENDENT UNION
+- DERIVED：派生表对应的子查询
+- MATERIALIZED：where 下的子查询结果被物化后与外层查询连接，该物化表为 materialized
+- UNCACHEABLE SUBQUERY：不常用
+- UNCACHEABLE UNION ：不常用
+
+### partitions
+
+分区这个列一般为 NULL
+
+### type
+
+type 表示对某个表执行查询的访问方法
+
+- system；该表使用的存储引擎的统计数据是精确的，比如 MyISAM，Memory
+- const：根据主键或者唯一二级索引列与常数进行等值匹配时，对表的访问方法就是 const
+- index：使用索引覆盖，但需要扫描全部索引记录，该表的访问方法为 index
+- ALL：全表扫描
+- ...
+
+### possible_keys
+
+可能用到的索引
+
+### key
+
+经过查询优化器计算使用不同索引的成本后，最后决定使用的 索引
+
+### key_len
+
+索引的最大长度
+
+### ref
+
+索引列使用等值匹配的条件去执行查询时，即type为const、eq_ref、ref...其中之一时。ref 展示与索引列作等值匹配的东西具体是啥，比如一个常数或某个具体的列
+
+### rows
+
+语句扫描的行数
+
+### filtered
+
+满足搜索条件的记录数量
+
+### extra
+
+输出额外信息
+
+- No tables used ：没有FROM子句
+- impossible WHERE：where 子句永远为 false时提示
+- No matching min/max row
+- Using index：使用索引覆盖
+- Using index condition：使用了索引下推
+- Using filesort：在内存或者磁盘中进行排序
+- ...
+
+## 索引调优
+
+> 高性能 MySQL 第三版 第五章
+
+## SQL 优化
+
+> 高性能 MySQL 第三版 第六章
+
+## 连接池
+
+- 短链接
+- 长连接
+- 连接池中请求处理的策略
+
+## MySQL 性能优化
+
+优化思路

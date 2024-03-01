@@ -35,7 +35,14 @@
      - 锁的类型
      - 死锁分析：间隙锁互相兼容，但与插入意向锁冲突造成的死锁
    - 日志
+     - un do log
+     - re do log
+     - bindo log
    - 性能调优
+     - explain 执行计划：type、key、extra
+     - 索引调优
+     - SQL 优化
+     - MySQL 性能优化
 3. [MySQL高可用]()
    - 主从复制 
    - 分库分表 
